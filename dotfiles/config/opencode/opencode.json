@@ -1,0 +1,136 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "lsp": true,
+  "compaction": {
+    "auto": true,
+    "prune": true
+  },
+  "modelModifiers": {
+    "maxContext": 65536,
+    "reservedTokens": 8192
+  },
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Ollama",
+      "options": {
+        "baseURL": "http://ollama:11434/v1"
+      },
+      "models": {
+        "qwen3.8:27b": {
+          "name": "qwen3.8"
+        },
+        "qwen3.6:35b-a3b": {
+          "name": "qwen3.6"
+        },
+        "gemma4:26b": {
+          "name": "gemma4"
+        },
+        "laguna-xs-2.1:Q4_K_M": {
+          "name": "laguna"
+        }
+      }
+    }
+  },
+  "agent": {
+    "Build": {
+      "mode": "primary",
+      "model": "ollama/qwen3.8:27b",
+      "options" : {
+        "num_ctx": 65536
+      },
+      "steps": 8,
+      "prompt": "You are a routing coordinator for Android work, NOT an implementer. Do not read, glob, grep, list, or explore the codebase yourself, and do not plan or draft code. Immediately delegate every substantive request via the task tool: planning, architecture, requirements, or understanding the codebase -> `planner`; any Kotlin/Jetpack Compose/MVVM code change, refactor, or bug fix -> `android-dev`; running Gradle build/lint/test or fixing build/test failures -> `android-build`; Android/Jetpack/Kotlin API or documentation questions -> `android-docs`. If a request needs several of these, delegate them in order and pass each subagent's concise result to the next. Relay the final subagent result to the user in a short summary and stop. Act directly only for a trivial request that requires no codebase access.",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "permission": {
+        "task": "allow",
+        "edit": "allow",
+        "bash": "deny",
+        "read": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "list": "deny",
+        "webfetch": "deny",
+        "websearch": "deny"
+      }
+    },
+    "build": {
+      "mode": "subagent",
+      "model": "ollama/qwen3.8:27b",
+      "options" : {
+        "num_ctx": 65536
+      },
+      "prompt": "You are the primary Android engineering agent in OpenCode. Delegate work to subagents rather than doing it inline: planning, architecture, and requirements analysis -> `planner`; Kotlin/Jetpack Compose/MVVM implementation, refactors, and bug fixes -> `android-dev`; running Gradle builds, lint, tests, or fixing compile/test failures -> `android-build`; looking up Android/Jetpack/Kotlin APIs or documentation -> `android-docs`. Work directly only when a task fits none of these. Enforce clean MVVM architecture (Kotlin, Jetpack Compose). Minimize conversational fluff and return concise results.",
+      "temperature": 0.1,
+      "top_p": 0.9,
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+    "planner": {
+      "mode": "subagent",
+      "model": "ollama/qwen3.8:27b",
+      "description": "Planning, architecture design, requirements analysis, and task breakdown for Android projects. Use for planning questions only; it does not write code.",
+      "options": {
+        "num_ctx": 32768
+      },
+      "steps": 20,
+      "temperature": 0.3,
+      "prompt": "You are an Android planning agent. Given a task or requirements, produce a structured plan: 1) goal and scope, 2) affected modules/files, 3) MVVM component split (UI/ViewModel/Repository/Model), 4) ordered implementation steps, 5) risks and open questions, 6) verification steps. Explore the codebase read-only to ground the plan. Do NOT write or modify code. Return a concise plan of at most 40 lines.",
+      "permission": {
+        "edit": "deny",
+        "bash": "allow",
+        "webfetch": "deny"
+      }
+    },
+    "android-dev": {
+      "mode": "subagent",
+      "model": "ollama/qwen3.8:27b",
+      "description": "Android implementation agent. Writes Kotlin, Jetpack Compose, and MVVM code; performs refactors and bug fixes.",
+      "options": {
+        "num_ctx": 32768
+      },
+      "steps": 30,
+      "temperature": 0.1,
+      "prompt": "You are an Android developer agent. Implement the given task with minimal, targeted edits using `patch`/`view`. Follow existing project structure and enforce clean MVVM architecture (Kotlin, Jetpack Compose): UI layer holds no business logic; ViewModels expose state; repositories abstract data. Do not reformat unrelated code. Return a summary of at most 25 lines: files changed, what changed, and any follow-up needed.",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+    "android-build": {
+      "mode": "subagent",
+      "model": "ollama/qwen3.8:27b",
+      "description": "Build and test agent. Runs Gradle builds, lint, and unit tests; fixes compile and test failures.",
+      "options": {
+        "num_ctx": 16384
+      },
+      "steps": 15,
+      "temperature": 0.1,
+      "prompt": "You are an Android build agent. Run the requested Gradle task (e.g. ./gradlew assembleDebug, lint, test) and report the result. If it fails, read the tail of the error output, fix the code minimally, and re-run. Keep edits strictly scoped to resolving the failure. Return a summary of at most 20 lines: command run, pass/fail, fixes made.",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow"
+      }
+    },
+    "android-docs": {
+      "mode": "subagent",
+      "model": "ollama/qwen3.8:27b",
+      "description": "Read-only documentation lookup agent for Android, Jetpack, Compose, and Kotlin APIs and best practices.",
+      "options": {
+        "num_ctx": 16384
+      },
+      "steps": 10,
+      "temperature": 0.2,
+      "prompt": "You are an Android documentation agent. Use webfetch/websearch to look up the requested Android/Jetpack/Compose/Kotlin API, behavior, or best practice. Cite the source URL for each claim. Do not modify any files. Return a concise answer of at most 20 lines with the API signature or guideline and the source link.",
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "webfetch": "allow",
+        "websearch": "allow"
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+dotfiles/android/**/*
+dotfiles/cache/**/*
+dotfiles/gradle/**/*
+dotfiles/local/state/opencode/**/*
+dotfiles/local/state/bash/**/*
+dotfiles/local/share/opencode/**/*
+dotfiles/m2/**/*
+
+# keep .gitkeep everywhere
+!**/.gitkeep

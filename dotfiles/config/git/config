@@ -1,0 +1,9 @@
+[alias]
+	addmod = "!git mod | xargs -r git -C \"$(git rev-parse --show-toplevel)\" add"
+	la = "!git config -l | sed -ne '/^alias./ s///p' | sort -t= -k1"
+	mod = "!git status -s | sed -nE '/^.M (.*)/ s//\\1/p'"
+	st = status
+	sw = switch
+[user]
+	email=daniel@chaosengine.net
+	name=Daniel Quinlan
