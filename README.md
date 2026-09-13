@@ -24,6 +24,9 @@ YMMV
    1. inside the container
       1. `git clone` or `git init` to get started
       1. run `opencode` to start the TUI
+1. run `opencode <project>` again to enter the same container (handy with Screen/Tmux)
+
+**Hint** use `git worktree` if you want to run more than one instance of Opencode for the same project, so they don't stomp on each other's changes.
 
 ## Customisation
 
@@ -33,7 +36,7 @@ the containers are ephemeral, anything you want to keep needs to be bind mounted
 
 * all of Opencode's directories
 * `~/.android` - Android SDK stuff
-* `~/.m2`, `~/.grade` - build/repo cache
+* `~/.m2`, `~/.gradle` - build/repo cache
 * `~/.config/git` - git config
 * `~/.config/bash` - bash config
 * `~/.local/state/bash` - bash history
@@ -42,11 +45,9 @@ the containers are ephemeral, anything you want to keep needs to be bind mounted
 
 * `dotfiles/config/git/config`       - main Git config
 * `dotfiles/config/git/config.user`  - your GitHub/Git user config, ignored by git
-* `dotfiles/config/git/credentials   - your GitHub/Git credentials, ignored by git
-
+* `dotfiles/config/git/credentials`  - your GitHub/Git credentials, ignored by git
 * `dotfiles/config/bash/bashrc`      - sourced by the `.bashrc` in the container
 * `dotfiles/config/bash/bashrc.user` - bash user config, env vars with creds etc, ignored by git
-
 * `dotfiles/config/opencode/opencode.json` - main Opencode config, customised for Android dev with a local LLM
 
 
