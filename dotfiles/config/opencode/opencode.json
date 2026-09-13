@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "share": "disabled",
   "lsp": true,
   "compaction": {
     "auto": true,
@@ -74,7 +75,7 @@
       "model": "ollama/qwen3.8:27b",
       "description": "Planning, architecture design, requirements analysis, and task breakdown for Android projects. Use for planning questions only; it does not write code.",
       "options": {
-        "num_ctx": 32768
+        "num_ctx": 65536
       },
       "steps": 20,
       "temperature": 0.3,
@@ -90,7 +91,7 @@
       "model": "ollama/qwen3.8:27b",
       "description": "Android implementation agent. Writes Kotlin, Jetpack Compose, and MVVM code; performs refactors and bug fixes.",
       "options": {
-        "num_ctx": 32768
+        "num_ctx": 65535
       },
       "steps": 30,
       "temperature": 0.1,
