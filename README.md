@@ -28,6 +28,17 @@ YMMV
 
 **Hint** use `git worktree` if you want to run more than one instance of Opencode for the same project, so they don't stomp on each other's changes.
 
+## Usage
+
+install creates a bunch of symlinks in `$HOME/.local/bin`
+
+* `opencode` - start or exec into the Opencode container created from [Dockerfile](Dockerfile)
+* `opencode-build` - build the Opencode image, use `--build-arg CACHE_BUST=$RANDOM` to force an update of Opencode
+* `ollama` - start or exec into the Ollama container
+* `ollama-pull` - pull the latest Ollama image
+* `open-webui` - start or exec into the Open-WebUI container
+* `open-webui-pull` - pull the latest Open-WebUI image
+
 ## Customisation
 
 the containers are ephemeral, anything you want to keep needs to be bind mounted (see [opencode.sh](opencode.sh)).
@@ -50,4 +61,11 @@ the containers are ephemeral, anything you want to keep needs to be bind mounted
 * `dotfiles/config/bash/bashrc.user` - bash user config, env vars with creds etc, ignored by git
 * `dotfiles/config/opencode/opencode.json` - main Opencode config, customised for Android dev with a local LLM
 
+### Opencode Dockerfile
+
+[Dockerfile](Dockerfile) contains a reasonably minimal Opencode + Android dev.
+
+* all the versions can be passed in as `--build-arg` to `opencode-build`, including the base image (though a Debian based image is assumed).
+* use `--build-arg CACHE_BUST=$RANDOM` to force an update of Opencode
+* includes [Hugo](https://gohugo.io) for generating GitHub Pages
 
