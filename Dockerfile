@@ -22,8 +22,15 @@ WORKDIR /root
 
 RUN apt-get update -qy \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
+      wget \
+ && wget -nv -O/etc/apt/keyrings/githubcli-archive-keyring.gpg https://cli.github.com/packages/githubcli-archive-keyring.gpg \
+ && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+ && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
+ && apt-get update -qy \
+ && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y \
       ca-certificates \
       curl \
+      gh \
       git \
       jq \
       less \
@@ -68,10 +75,6 @@ RUN echo 'export ANDROID_HOME=$HOME/android-sdk' >> $BASH_ENV \
  && echo 'export ANDROID_SDK_ROOT=$HOME/android-sdk' >> $BASH_ENV \
  && echo 'export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$ANDROID_HOME/build-tools/$ANDROID_BUILD_TOOLS:$HOME/.local/bin' >> $BASH_ENV \
  && echo 'export LD_LIBRARY_PATH="$ANDROID_SDK_ROOT/emulator/lib64:$ANDROID_SDK_ROOT/emulator/lib64/qt/lib"' >> $BASH_ENV
-
-# deprecated
-#RUN bash -o pipefail -c "source $BASH_ENV \
-#      && yes | sdkmanager --licenses || true"
 
 RUN bash -c "source $BASH_ENV \
  && android sdk install \
