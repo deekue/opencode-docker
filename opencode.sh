@@ -21,28 +21,30 @@ declare -A images=(
 
 function start_container {
   local -r containerName="${1:?arg 1 is container name}"; shift
+  local -r instance="${2:?arg 2 is container instance name}"; shift
   local -a args=("$@")
 
   local -r containerImage="${images[$containerName]}"
-  status="$(podman container ls -l -f name="$containerName" --format '{{json .Status}}')"
+  local -r instanceName="$containerName-$instance"
+  status="$(podman container ls -l -f name="$instanceName" --format '{{json .Status}}')"
 
   case "${status#\"}" in
     Up*)
-      echo "$containerName is running"
-      podman exec -it "$containerName" /bin/bash
+      echo "$instanceName is running"
+      podman exec -it "$instanceName" /bin/bash
       ;;
     Exit*)
       # only relevant if OPENCODE_CONTAINER_PERSIST is set
-      podman start "$containerName"
+      podman start "$instanceName"
       # TODO add a wait and then exec in
-      podman wait --condition=running "$containerName"
-      podman exec -it "$containerName" /bin/bash
+      podman wait --condition=running "$instanceName"
+      podman exec -it "$instanceName" /bin/bash
       ;;
     *)
       podman run \
 	      --network "$OLLAMA_NETWORK" \
-	      --name "$containerName" \
-	      -h "$containerName" \
+	      --name "$instanceName" \
+	      -h "$instanceName" \
 	      "${args[@]}" \
 	      "$containerImage"
       ;;
@@ -85,12 +87,12 @@ baseDir="$(dirname -- "$(readlink -e -- "$0")")"
 case "$caller" in
   opencode-build)
     cd "$baseDir"
-    podman build -t opencode-docker --format docker .
+    podman build -t opencode-docker --format docker "$@" .
     ;;
   opencode)
     project="${1:?arg1 is project under $OPENCODE_PROJECT_DIR to work on}"
     mkdir -p "$OPENCODE_PROJECT_DIR/$project"
-    start_container opencode \
+    start_container opencode "$project" \
       ${OPENCODE_CONTAINER_PERSIST:- --rm} -it \
       -v "$OPENCODE_PROJECT_DIR/$project:/home/ubuntu/src/$project:U" \
       -v "$OPENCODE_PROJECT_DIR/$project-worktrees:/home/ubuntu/src/$project-worktrees:U" \
@@ -112,7 +114,7 @@ case "$caller" in
       --device /dev/kvm
     ;;
   ollama)
-    start_container ollama \
+    start_container ollama server \
       -e OLLAMA_CONTEXT_LENGTH \
       -e OLLAMA_NUM_PARALLEL \
       -e OLLAMA_MAX_LOADED_MODELS \
@@ -123,7 +125,7 @@ case "$caller" in
       -p "127.0.0.1:$OLLAMA_PORT:11434"
     ;;
   open-webui)
-    start_container open-webui \
+    start_container open-webui server \
       -d \
       -p 3000:8080 \
       -v "$HOME/.open-webui:/app/backend/data" \
