@@ -1,3 +1,4 @@
+# ignore cache/state, use .gitkeep to keep directories
 dotfiles/android/**/*
 dotfiles/cache/**/*
 dotfiles/gradle/**/*
@@ -5,6 +6,13 @@ dotfiles/local/state/opencode/**/*
 dotfiles/local/state/bash/**/*
 dotfiles/local/share/opencode/**/*
 dotfiles/m2/**/*
+
+# ignore credentials
+dotfiles/config/git/credentials
+
+# ignore user config (creds/tokens etc)
+dotfiles/config/git/config.user
+dotfiles/config/bash/bashrc.user
 
 # keep .gitkeep everywhere
 !**/.gitkeep

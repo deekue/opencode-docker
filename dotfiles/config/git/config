@@ -1,9 +1,24 @@
 [alias]
 	addmod = "!git mod | xargs -r git -C \"$(git rev-parse --show-toplevel)\" add"
 	la = "!git config -l | sed -ne '/^alias./ s///p' | sort -t= -k1"
+        lln = log --color --pretty=oneline -n 
+        ll = lln 20
 	mod = "!git status -s | sed -nE '/^.M (.*)/ s//\\1/p'"
 	st = status
 	sw = switch
-[user]
-	email=daniel@chaosengine.net
-	name=Daniel Quinlan
+
+[credential]
+	helper = store
+
+# per https://groups.google.com/forum/m/#!topic/binary-transparency/f-BI4o8HZW0
+# for $deity's sake, check that anything we're getting is complete and sane on a regular basis 
+[transfer] 
+	fsckobjects = true 
+[fetch] 
+	fsckobjects = true 
+	prune = true
+[receive] 
+	fsckObjects = true 
+
+[include]
+	path = ~/.config/git/config.user
