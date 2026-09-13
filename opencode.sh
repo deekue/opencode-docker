@@ -21,7 +21,7 @@ declare -A images=(
 
 function start_container {
   local -r containerName="${1:?arg 1 is container name}"; shift
-  local -r instance="${2:?arg 2 is container instance name}"; shift
+  local -r instance="${1:?arg 1 is container instance name}"; shift
   local -a args=("$@")
 
   local -r containerImage="${images[$containerName]}"
@@ -91,7 +91,7 @@ case "$caller" in
     ;;
   opencode)
     project="${1:?arg1 is project under $OPENCODE_PROJECT_DIR to work on}"
-    mkdir -p "$OPENCODE_PROJECT_DIR/$project"
+    mkdir -p "$OPENCODE_PROJECT_DIR/$project"{,-worktrees}
     start_container opencode "$project" \
       ${OPENCODE_CONTAINER_PERSIST:- --rm} -it \
       -v "$OPENCODE_PROJECT_DIR/$project:/home/ubuntu/src/$project:U" \
