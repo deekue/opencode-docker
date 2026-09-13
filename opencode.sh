@@ -10,7 +10,8 @@ export OLLAMA_NUM_PARALLEL=2       # only allow 2, to preserve VRAM for KV cache
 export OLLAMA_MAX_LOADED_MODELS=1  # only load one model at a time
 
 # where to persist the Opencode container
-export OPENCODE_CONTAINER_PERSIST=
+OPENCODE_PROJECT_DIR="$HOME/src"
+OPENCODE_CONTAINER_PERSIST=
 
 declare -A images=(
   [ollama]=docker.io/ollama/ollama:latest
@@ -48,6 +49,36 @@ function start_container {
   esac
 }
 
+function install {
+  # should be idempotent
+  binDir="$HOME/.local/bin"
+  mkdir -p "$binDir" "$OPENCODE_PROJECT_DIR"
+
+  echo "installing symlinks in $binDir"
+  for name in "${!images[@]}" ; do
+    [[ -e "$binDir/$name" ]] || ln -sv "$baseDir/opencode.sh" "$binDir/$name"
+    if [[ "$name" == "opencode" ]] ; then
+      [[ -e "$binDir/$name-build" ]] || ln -sv "$baseDir/opencode.sh" "$binDir/$name-build"
+    else
+      [[ -e "$binDir/$name-pull" ]] || ln -sv "$baseDir/opencode.sh" "$binDir/$name-pull"
+    fi
+  done
+  if ! grep -q "PATH=.*$binDir" "$HOME/.bashrc" ; then
+    echo "adding $binDir to PATH in $HOME/.bashrc"
+    printf 'export PATH="$PATH:%s' "$binDir" >> "$HOME/.bashrc"
+  fi
+  if ! echo "$PATH" | grep -q "$binDir" ; then
+    . "$HOME/.bashrc"
+  fi
+  echo "Pulling ollama image with 'ollama-pull'"
+  command -v "ollama-pull" && ollama-pull
+  echo "Building opencode image with 'opencode-build'"
+  command -v "opencode-build" && opencode-build
+  if command -v "opencode" ; then
+    echo "run 'opencode PROJECT' to work on $HOME/src/PROJECT"
+  fi
+}
+
 caller="$(basename -- "$0")"
 baseDir="$(dirname -- "$(readlink -e -- "$0")")"
 
@@ -57,11 +88,12 @@ case "$caller" in
     podman build -t opencode-docker --format docker .
     ;;
   opencode)
-    PROJECT="${1:?arg1 is project under $HOME/src to work on}"
+    project="${1:?arg1 is project under $OPENCODE_PROJECT_DIR to work on}"
+    mkdir -p "$OPENCODE_PROJECT_DIR/$project"
     start_container opencode \
-      ${OPENCODE_CONTAINER_PERSIST:- --rm} \
-      -it \
-      -v "$HOME/src/$PROJECT:/home/ubuntu/src/$PROJECT:U" \
+      ${OPENCODE_CONTAINER_PERSIST:- --rm} -it \
+      -v "$OPENCODE_PROJECT_DIR/$project:/home/ubuntu/src/$project:U" \
+      -v "$OPENCODE_PROJECT_DIR/$project-worktrees:/home/ubuntu/src/$project-worktrees:U" \
       -v "$baseDir/dotfiles/config/bash:/home/ubuntu/.config/bash:U" \
       -v "$baseDir/dotfiles/config/git:/home/ubuntu/.config/git:U" \
       -v "$baseDir/dotfiles/cache/opencode:/home/ubuntu/.cache/opencode:U" \
@@ -76,7 +108,7 @@ case "$caller" in
       -e LANG \
       -e TERM \
       -e TZ \
-      -w /home/ubuntu/src \
+      -w "/home/ubuntu/src/$project" \
       --device /dev/kvm
     ;;
   ollama)
@@ -103,29 +135,7 @@ case "$caller" in
     ;;
   opencode.sh)
     # called directly, assume install
-    binDir="$HOME/.local/bin"
-    mkdir -p "$binDir" "$HOME/src"
-    echo "installing symlinks in $binDir"
-    for name in "${!images[@]}" ; do
-      ln -svi "$baseDir/opencode.sh" "$binDir/$name" || true
-      if [[ "$name" == "opencode" ]] ; then
-        ln -svi "$baseDir/opencode.sh" "$binDir/$name-build" || true
-      else
-        ln -svi "$baseDir/opencode.sh" "$binDir/$name-pull" || true
-      fi
-    done
-    if ! grep -q "$binDir" "$HOME/.bashrc" ; then
-      echo "adding $binDir to PATH in $HOME/.bashrc"
-      printf 'export PATH="$PATH:%s' "$binDir" >> "$HOME/.bashrc"
-    fi
-    if ! echo "$PATH" | grep -q "$binDir" ; then
-      . "$HOME/.bashrc"
-    fi
-    if command -v "opencode" ; then
-      echo "ready to go, run 'ollama-pull' then 'ollama' to start the backend"
-      echo "then 'opencode-build' to build the Opencode container"
-      echo "then 'opencode PROJECT' to work on $HOME/src/PROJECT"
-    fi
+    install
     ;;
   *)
     echo "ERROR: unknown caller '$caller'" >&2
