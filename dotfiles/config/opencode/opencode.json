@@ -15,7 +15,7 @@
       "npm": "@ai-sdk/openai-compatible",
       "name": "Ollama",
       "options": {
-        "baseURL": "http://ollama:11434/v1"
+        "baseURL": "http://ollama-server:11434/v1"
       },
       "models": {
         "qwen3.8:27b": {
